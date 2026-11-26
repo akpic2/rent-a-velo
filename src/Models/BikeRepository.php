@@ -63,4 +63,17 @@ class BikeRepository
         $query->bindValue(':bike_id', $bikeId, PDO::PARAM_INT);
         $query->execute();
     }
+
+    public function update(Bike $bike): void
+    {
+        $query = $this->pdo->prepare(
+            "UPDATE bikes SET registration_number = :registration_number, availability = :availability, photo = :photo WHERE bike_id = :bike_id"
+        );
+        $query->execute([
+            'registration_number' => $bike->getRegistrationNumber(),
+            'availability' => $bike->getAvailability(),
+            'photo' => $bike->getPhoto(),
+            'bike_id' => $bike->getBikeId(),
+        ]);
+    }
 }

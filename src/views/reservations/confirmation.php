@@ -13,4 +13,8 @@
     Statut : <span class="badge badge--<?= $reservation->getStatus() ?>"><?= $reservation->getStatusLabel() ?></span>
 </p>
 
+<?php if (estConnecte() && $reservation->getUserId() === $_SESSION['user_id']): ?>
+    <p><a class="button" href="?url=mes-reservations">Suivre mes réservations</a></p>
+<?php endif; ?>
+
 <a href="?url=velos">← Retour aux vélos</a>

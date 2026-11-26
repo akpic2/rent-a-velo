@@ -9,7 +9,7 @@ use App\Controllers\ErreurController;
 use App\Controllers\ReservationController;
 use App\Controllers\UserController;
 
-// La session garde l'employé connecté et les messages flash d'une page à l'autre
+// La session garde l'utilisateur connecté et les messages flash d'une page à l'autre
 session_start();
 
 // Ce fichier est le routeur : il lit ?url=... et appelle la bonne méthode du bon contrôleur
@@ -27,8 +27,11 @@ match ($url) {
     'reserver' => $reservationController->create($id),
     'reservation-store' => $reservationController->store(),
     'confirmation' => $reservationController->confirmation($id),
+    'mes-reservations' => $reservationController->myReservations(),
 
-    // Connexion des employés
+    // Inscription et connexion
+    'inscription' => $userController->register(),
+    'inscription-store' => $userController->storeRegistration(),
     'connexion' => $userController->login(),
     'connexion-verif' => $userController->checkLogin(),
     'deconnexion' => $userController->logout(),
@@ -44,6 +47,8 @@ match ($url) {
     'admin-velos' => $bikeController->adminIndex(),
     'velo-create' => $bikeController->create(),
     'velo-store' => $bikeController->store(),
+    'velo-edit' => $bikeController->edit($id),
+    'velo-update' => $bikeController->update(),
     'velo-dispo' => $bikeController->toggleAvailability(),
 
     // Tableau de bord : comptes

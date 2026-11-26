@@ -38,9 +38,10 @@ class ReservationController
         }
 
         $bikeId = (int) ($_POST['bike_id'] ?? 0);
-        $firstname = trim($_POST['firstname'] ?? '');
-        $lastname = trim($_POST['lastname'] ?? '');
-        $login = trim($_POST['login'] ?? '');
+        $usagerConnecte = estConnecte() && ($_SESSION['role'] ?? '') === 'citizen';
+        $firstname = $usagerConnecte ? $_SESSION['firstname'] : trim($_POST['firstname'] ?? '');
+        $lastname = $usagerConnecte ? $_SESSION['lastname'] : trim($_POST['lastname'] ?? '');
+        $login = $usagerConnecte ? $_SESSION['login'] : trim($_POST['login'] ?? '');
         $startDate = $_POST['start_date'] ?? '';
         $endDate = $_POST['end_date'] ?? '';
 
@@ -74,24 +75,28 @@ class ReservationController
         if ($erreur !== null) {
             render('reservations/form', 'Réserver le vélo ' . $bike->getRegistrationNumber(), $this->donneesFormulaire($bikeId, [
                 'erreur' => $erreur,
-                'saisie' => $_POST,
+                'saisie' => array_merge($_POST, compact('firstname', 'lastname', 'login')),
             ]));
             return;
         }
 
-        // L'usager n'a pas de compte : on le retrouve par son email, ou on le crée sans mot de passe
-        $userRepository = new UserRepository();
-        $user = $userRepository->findByLogin($login);
-
-        if ($user === null) {
-            $user = new User();
-            $user->setFirstname($firstname);
-            $user->setLastname($lastname);
-            $user->setLogin($login);
-            $user->setRole('citizen');
-            $userId = $userRepository->insert($user);
+        if ($usagerConnecte) {
+            $userId = $_SESSION['user_id'];
         } else {
-            $userId = $user->getUserId();
+            // Sans connexion, on retrouve l'usager par email ou on le crée sans mot de passe.
+            $userRepository = new UserRepository();
+            $user = $userRepository->findByLogin($login);
+
+            if ($user === null) {
+                $user = new User();
+                $user->setFirstname($firstname);
+                $user->setLastname($lastname);
+                $user->setLogin($login);
+                $user->setRole('citizen');
+                $userId = $userRepository->insert($user);
+            } else {
+                $userId = $user->getUserId();
+            }
         }
 
         $reservation = new Reservation();
@@ -121,11 +126,21 @@ class ReservationController
         render('reservations/confirmation', "Réservation n° {$resNum}", ['reservation' => $reservation]);
     }
 
+    public function myReservations(): void
+    {
+        exigerConnexion();
+
+        $repository = new ReservationRepository();
+        $reservations = $repository->findByUserId($_SESSION['user_id']);
+
+        render('reservations/index', 'Mes réservations', ['reservations' => $reservations]);
+    }
+
     /* ---------- Tableau de bord employés ---------- */
 
     public function adminIndex(): void
     {
-        exigerConnexion();
+        exigerEmploye();
 
         $repository = new ReservationRepository();
         $reservations = $repository->findPending();
@@ -136,7 +151,7 @@ class ReservationController
     // Appelée en AJAX par public/js/recherche.js : renvoie seulement les lignes du tableau
     public function search(string $texte): void
     {
-        exigerConnexion();
+        exigerEmploye();
 
         $repository = new ReservationRepository();
         $texte = trim($texte);
@@ -185,7 +200,7 @@ class ReservationController
 
     private function changerStatut(string $status, string $message): void
     {
-        exigerConnexion();
+        exigerEmploye();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(404);
@@ -214,7 +229,11 @@ class ReservationController
         return array_merge([
             'bike' => $bikeRepository->findById($bikeId),
             'periodesPrises' => $reservationRepository->findUpcomingByBike($bikeId),
-            'saisie' => [],
+            'saisie' => estConnecte() && ($_SESSION['role'] ?? '') === 'citizen' ? [
+                'firstname' => $_SESSION['firstname'],
+                'lastname' => $_SESSION['lastname'],
+                'login' => $_SESSION['login'],
+            ] : [],
         ], $autres);
     }
 

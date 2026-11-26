@@ -43,6 +43,15 @@ class ReservationRepository
         return hydrate(Reservation::class, $ligne);
     }
 
+    public function findByUserId(int $userId): array
+    {
+        $query = $this->pdo->prepare(self::SELECT_RESERVATIONS . " WHERE reservations.user_id = :user_id ORDER BY reservations.res_date DESC, reservations.res_num DESC");
+        $query->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $query->execute();
+
+        return $this->hydrateAll($query->fetchAll(PDO::FETCH_ASSOC));
+    }
+
     /**
      * Les périodes déjà prises pour un vélo (en attente ou acceptées), à partir d'aujourd'hui.
      */

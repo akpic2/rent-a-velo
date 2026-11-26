@@ -1,4 +1,4 @@
-<h2 class="title">Connexion employés</h2>
+<h2 class="title">Connexion</h2>
 
 <?php if (isset($erreur)): ?>
     <p class="error"><?= htmlspecialchars($erreur) ?></p>
@@ -17,3 +17,5 @@
 
     <button class="button" type="submit">Se connecter</button>
 </form>
+
+<p>Pas encore de compte ? <a href="?url=inscription">Créer un compte</a></p>

@@ -234,6 +234,26 @@ button {
   gap: var(--space-s);
 }
 
+.form__password {
+  display: flex;
+  gap: var(--space-s);
+}
+
+.form__password input {
+  flex: 1;
+  min-width: 0;
+}
+
+.form__password .button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-s);
+  min-width: 44px;
+  min-height: 44px;
+}
+
 .form .button {
   align-self: flex-start;
 }

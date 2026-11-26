@@ -9,21 +9,27 @@ declare(strict_types=1);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rent a Vélo | <?= htmlspecialchars($title) ?></title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/mot-de-passe.js" defer></script>
 </head>
 <body>
     <header class="header">
         <h1 class="header__logo"><a href="index.php">Rent a Vélo</a></h1>
 
         <nav class="nav">
-            <?php if (estConnecte()): ?>
+            <?php if (estEmploye()): ?>
                 <a class="nav__link" href="?url=admin">Réservations</a>
                 <a class="nav__link" href="?url=admin-velos">Vélos</a>
                 <a class="nav__link" href="?url=admin-comptes">Comptes</a>
                 <a class="nav__link" href="?url=velos">Site public</a>
                 <a class="nav__link" href="?url=deconnexion">Déconnexion (<?= htmlspecialchars($_SESSION['firstname']) ?>)</a>
+            <?php elseif (estConnecte()): ?>
+                <a class="nav__link" href="?url=velos">Nos vélos</a>
+                <a class="nav__link" href="?url=mes-reservations">Mes réservations</a>
+                <a class="nav__link" href="?url=deconnexion">Déconnexion (<?= htmlspecialchars($_SESSION['firstname']) ?>)</a>
             <?php else: ?>
                 <a class="nav__link" href="?url=velos">Nos vélos</a>
-                <a class="nav__link" href="?url=connexion">Espace employés</a>
+                <a class="nav__link" href="?url=connexion">Connexion</a>
+                <a class="nav__link" href="?url=inscription">Créer un compte</a>
             <?php endif; ?>
         </nav>
     </header>

@@ -26,17 +26,17 @@
 
     <div class="form__field">
         <label for="firstname">Prénom</label>
-        <input type="text" name="firstname" id="firstname" value="<?= htmlspecialchars($saisie['firstname'] ?? '') ?>" required>
+        <input type="text" name="firstname" id="firstname" value="<?= htmlspecialchars($saisie['firstname'] ?? '') ?>" <?= estConnecte() && !estEmploye() ? 'readonly' : '' ?> required>
     </div>
 
     <div class="form__field">
         <label for="lastname">Nom</label>
-        <input type="text" name="lastname" id="lastname" value="<?= htmlspecialchars($saisie['lastname'] ?? '') ?>" required>
+        <input type="text" name="lastname" id="lastname" value="<?= htmlspecialchars($saisie['lastname'] ?? '') ?>" <?= estConnecte() && !estEmploye() ? 'readonly' : '' ?> required>
     </div>
 
     <div class="form__field">
         <label for="login">Email</label>
-        <input type="email" name="login" id="login" value="<?= htmlspecialchars($saisie['login'] ?? '') ?>" required>
+        <input type="email" name="login" id="login" value="<?= htmlspecialchars($saisie['login'] ?? '') ?>" <?= estConnecte() && !estEmploye() ? 'readonly' : '' ?> required>
     </div>
 
     <div class="form__field">

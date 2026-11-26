@@ -10,7 +10,7 @@ CREATE TABLE `users`(
    `lastname` VARCHAR(255) NOT NULL,
    -- Correction 1 : INT -> VARCHAR, on se connecte avec une adresse email
    `login` VARCHAR(100) NOT NULL,
-   -- NULL pour un usager : il réserve sans compte, il ne se connecte jamais
+   -- NULL pour une réservation sans compte ; un usager inscrit a un mot de passe haché
    `password` VARCHAR(80),
    -- Correction 2 : le rôle distingue l'usager, l'employé et l'administrateur
    `role` ENUM('citizen', 'employee', 'admin') NOT NULL DEFAULT 'citizen',

@@ -14,11 +14,11 @@ class UserController
     public function login(): void
     {
         if (estConnecte()) {
-            header('Location: index.php?url=admin');
+            header('Location: index.php?url=' . (estEmploye() ? 'admin' : 'velos'));
             exit;
         }
 
-        render('users/connexion', 'Connexion employés');
+        render('users/connexion', 'Connexion');
     }
 
     public function checkLogin(): void
@@ -35,10 +35,10 @@ class UserController
         $repository = new UserRepository();
         $user = $repository->findByLogin($login);
 
-        // Un usager n'a pas de mot de passe : il ne peut pas se connecter.
+        // Une réservation sans compte ne donne pas de mot de passe.
         // Même message dans tous les cas, pour ne pas dire si l'email existe.
         if ($user === null || $user->getPassword() === null || !password_verify($password, $user->getPassword())) {
-            render('users/connexion', 'Connexion employés', [
+            render('users/connexion', 'Connexion', [
                 'erreur' => 'Identifiant ou mot de passe incorrect.',
                 'login' => $login,
             ]);
@@ -48,13 +48,15 @@ class UserController
         // Nouvel identifiant de session après connexion (contre le vol de session)
         session_regenerate_id(true);
 
-        // On garde seulement l'id, le prénom et le rôle : jamais le mot de passe en session
+        // Identité et rôle uniquement : jamais le mot de passe en session
         $_SESSION['user_id'] = $user->getUserId();
         $_SESSION['firstname'] = $user->getFirstname();
+        $_SESSION['lastname'] = $user->getLastname();
+        $_SESSION['login'] = $user->getLogin();
         $_SESSION['role'] = $user->getRole();
 
         $_SESSION['flash'] = "Bonjour {$user->getFirstname()} !";
-        header('Location: index.php?url=admin');
+        header('Location: index.php?url=' . (estEmploye() ? 'admin' : 'velos'));
         exit;
     }
 
@@ -67,18 +69,98 @@ class UserController
         exit;
     }
 
+    public function register(): void
+    {
+        if (estConnecte()) {
+            header('Location: index.php?url=velos');
+            exit;
+        }
+
+        render('users/inscription', 'Créer un compte', ['saisie' => []]);
+    }
+
+    public function storeRegistration(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(404);
+            render('errors/404', 'Page non trouvée');
+            return;
+        }
+
+        if (estConnecte()) {
+            header('Location: index.php?url=velos');
+            exit;
+        }
+
+        if (!verifierCsrf()) {
+            return;
+        }
+
+        $firstname = trim(is_string($_POST['firstname'] ?? null) ? $_POST['firstname'] : '');
+        $lastname = trim(is_string($_POST['lastname'] ?? null) ? $_POST['lastname'] : '');
+        $login = trim(is_string($_POST['login'] ?? null) ? $_POST['login'] : '');
+        $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+        $confirmation = is_string($_POST['password_confirmation'] ?? null) ? $_POST['password_confirmation'] : '';
+        $saisie = compact('firstname', 'lastname', 'login');
+        $repository = new UserRepository();
+
+        $erreur = null;
+        if ($firstname === '' || $lastname === '' || $login === '' || $password === '') {
+            $erreur = 'Tous les champs sont obligatoires.';
+        } elseif (strlen($firstname) > 255 || strlen($lastname) > 255 || strlen($login) > 100) {
+            $erreur = 'Le nom et le prénom sont limités à 255 octets, et l\'email à 100 octets.';
+        } elseif (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $erreur = 'L\'identifiant doit être une adresse email.';
+        } elseif (strlen($password) < 8 || strlen($password) > 72 || str_contains($password, "\0")) {
+            $erreur = 'Le mot de passe doit faire entre 8 et 72 octets, sans caractère nul.';
+        } elseif ($password !== $confirmation) {
+            $erreur = 'Les mots de passe ne correspondent pas.';
+        } elseif ($repository->findByLogin($login) !== null) {
+            $erreur = 'Cette adresse email est déjà utilisée.';
+        }
+
+        if ($erreur !== null) {
+            render('users/inscription', 'Créer un compte', compact('erreur', 'saisie'));
+            return;
+        }
+
+        $user = new User();
+        $user->setFirstname($firstname);
+        $user->setLastname($lastname);
+        $user->setLogin($login);
+        $user->setPassword(password_hash($password, PASSWORD_DEFAULT));
+        $user->setRole('citizen');
+
+        try {
+            $repository->insert($user);
+        } catch (\PDOException $exception) {
+            if (($exception->errorInfo[1] ?? null) !== 1062) {
+                throw $exception;
+            }
+            render('users/inscription', 'Créer un compte', [
+                'erreur' => 'Cette adresse email est déjà utilisée.',
+                'saisie' => $saisie,
+            ]);
+            return;
+        }
+
+        $_SESSION['flash'] = 'Votre compte a été créé. Vous pouvez maintenant vous connecter.';
+        header('Location: index.php?url=connexion');
+        exit;
+    }
+
     /* ---------- Gestion des comptes ---------- */
 
     public function index(): void
     {
-        exigerConnexion();
+        exigerEmploye();
 
         render('admin/users', 'Comptes utilisateurs', $this->donneesPage());
     }
 
     public function store(): void
     {
-        exigerConnexion();
+        exigerEmploye();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(404);

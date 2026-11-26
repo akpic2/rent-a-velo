@@ -10,7 +10,7 @@ class User
     private string $firstname = '';
     private string $lastname = '';
     private string $login = '';
-    // null pour un usager : il n'a pas de mot de passe
+    // null pour une réservation effectuée sans compte
     private ?string $password = null;
     private string $role = 'citizen';
 

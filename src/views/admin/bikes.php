@@ -25,6 +25,9 @@
                         <?php endif; ?>
                     </td>
                     <td>
+                        <?php if (estAdmin()): ?>
+                            <a class="button button--small" href="?url=velo-edit&amp;id=<?= $bike->getBikeId() ?>">Modifier</a>
+                        <?php endif; ?>
                         <form action="?url=velo-dispo" method="post">
                             <input type="hidden" name="bike_id" value="<?= $bike->getBikeId() ?>">
                             <button class="button button--small button--ghost" type="submit">
